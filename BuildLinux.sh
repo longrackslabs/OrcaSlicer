@@ -78,33 +78,26 @@ then
     exit 0
 fi
 
-DISTRIBUTION=$(awk -F= '/^ID=/ {print $2}' /etc/os-release)
-# treat ubuntu as debian
-if [ "${DISTRIBUTION}" == "ubuntu" ]
-then
-    DISTRIBUTION="debian"
-fi
-if [ ! -f ./linux.d/${DISTRIBUTION} ]
-then
-    echo "Your distribution does not appear to be currently supported by these build scripts"
-    exit 1
-fi
-source ./linux.d/${DISTRIBUTION}
+# Only check for GTK3 if building dependencies or slicer
+if [[ -n "${BUILD_DEPS}" || -n "${BUILD_ORCA}" ]]; then
+    echo "Checking for GTK3 dependencies..."
+    DISTRIBUTION=$(awk -F= '/^ID=/ {print $2}' /etc/os-release)
+    if [ "${DISTRIBUTION}" == "ubuntu" ] || [ "${DISTRIBUTION}" == "linuxmint" ]; then
+        DISTRIBUTION="debian"
+    fi
+    if [ ! -f ./linux.d/${DISTRIBUTION} ]; then
+        echo "Your distribution does not appear to be currently supported by these build scripts"
+        exit 1
+    fi
+    source ./linux.d/${DISTRIBUTION}
 
-echo "FOUND_GTK3=${FOUND_GTK3}"
-if [[ -z "${FOUND_GTK3_DEV}" ]]
-then
-    echo "Error, you must install the dependencies before."
-    echo "Use option -u with sudo"
-    exit 1
+    echo "FOUND_GTK3=${FOUND_GTK3}"
+    if [[ -z "${FOUND_GTK3_DEV}" ]]; then
+        echo "Error, you must install the dependencies before."
+        echo "Use option -u with sudo"
+        exit 1
+    fi
 fi
-
-echo "Changing date in version..."
-{
-    # change date in version
-    sed -i "s/+UNKNOWN/_$(date '+%F')/" version.inc
-}
-echo "done"
 
 
 if ! [[ -n "${SKIP_RAM_CHECK}" ]]
@@ -112,14 +105,16 @@ then
     check_available_memory_and_disk
 fi
 
+if [[ -n "${CLEAN_BUILD}" ]]; then
+    echo "Cleaning up build directories..."
+    rm -fr deps/build
+    rm -fr build
+fi
+
 if [[ -n "${BUILD_DEPS}" ]]
 then
     echo "Configuring dependencies..."
     BUILD_ARGS="-DDEP_WX_GTK3=ON"
-    if [[ -n "${CLEAN_BUILD}" ]]
-    then
-        rm -fr deps/build
-    fi
     if [ ! -d "deps/build" ]
     then
         mkdir deps/build
@@ -145,10 +140,13 @@ fi
 if [[ -n "${BUILD_ORCA}" ]]
 then
     echo "Configuring OrcaSlicer..."
-    if [[ -n "${CLEAN_BUILD}" ]]
-    then
-        rm -fr build
-    fi
+    echo "Changing date in version..."
+    {
+        # change date in version
+        sed -i "s/+UNKNOWN/_$(date '+%F')/" version.inc
+    }
+    echo "done"
+
     BUILD_ARGS=""
     if [[ -n "${FOUND_GTK3_DEV}" ]]
     then
