@@ -6,10 +6,10 @@ ARG UID=1000
 ARG GID=1000
 ARG USER=appuser
 ARG CLEAN="NO"
-ARG UPDATE_DEPS="NO"
-ARG BUILD_DEPS="NO"
-ARG BUILD_SLICER="NO"
-ARG BUILD_APPIMAGE="NO"
+ARG BUILD_U="NO"
+ARG BUILD_D="NO"
+ARG BUILD_S="NO"
+ARG BUILD_I="NO"
 
 # Only add the user if not root
 RUN [ "$UID" != "0" ] && groupadd -g $GID $USER && useradd -m -u $UID -g $GID -s /bin/bash $USER
@@ -83,16 +83,16 @@ WORKDIR OrcaSlicer
 RUN if [ "$CLEAN" = "YES" ]; then ./BuildLinux.sh -c; fi
 
 # Update system dependencies
-RUN if [ "$UPDATE_DEPS" = "YES" ]; then ./BuildLinux.sh -u; fi
+RUN if [ "$BUILD_U" = "YES" ]; then ./BuildLinux.sh -u; fi
 
 # Build dependencies in ./deps
-RUN if [ "$BUILD_DEPS" = "YES" ]; then ./BuildLinux.sh -d; fi
+RUN if [ "$BUILD_D" = "YES" ]; then ./BuildLinux.sh -d; fi
 
 # Build slic3r
-RUN if [ "$BUILD_SLICER" = "YES" ]; then ./BuildLinux.sh -s; fi
+RUN if [ "$BUILD_S" = "YES" ]; then ./BuildLinux.sh -s; fi
 
 # Build AppImage
-RUN if [ "$BUILD_APPIMAGE" = "YES" ]; then ./BuildLinux.sh -i; fi
+RUN if [ "$BUILD_I" = "YES" ]; then ./BuildLinux.sh -i; fi
 
 
 # It's easier to run Orca Slicer as the same username,
@@ -121,9 +121,9 @@ WORKDIR /home/$USER
 # Ensure the application knows where the home directory is
 ENV HOME=/home/$USER
 
+# for debugging, use an entrypoint instead of CMD to start a bash shell
+# ENTRYPOINT ["/bin/bash"]
+
 # Using an entrypoint instead of CMD because the binary
 # accepts several command line arguments.
-# ENTRYPOINT ["/OrcaSlicer/build/package/bin/orca-slicer"]
-
-# Using an entrypoint instead of CMD to start a bash shell
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/OrcaSlicer/build/package/bin/orca-slicer"]
