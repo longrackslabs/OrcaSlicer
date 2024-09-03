@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  orcaslicer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER: ${USER:-appuser}          # Use environment variable or default to 'appuser'
+        UID: ${UID:-1000}               # Default to 1000 if not provided
+        GID: ${GID:-1000}               # Default to 1000 if not provided
+        NCORES: ${NCORES:-1}            # Default to 1 if not provided
+        UPDATE_DEPS: ${UPDATE_DEPS:-NO} # Add build arguments for controlling build steps
+        BUILD_DEPS: ${BUILD_DEPS:-NO}
+        BUILD_SLICER: ${BUILD_SLICER:-NO}
+        BUILD_APPIMAGE: ${BUILD_APPIMAGE:-NO}
+    image: orcaslicer
+    container_name: orcaslicer
+    volumes:
+      - build_cache:/workspace/build
+      - deps_cache:/workspace/deps
+      - ./ccache:/home/${USER}/.ccache
+    environment:
+      - USER=${USER:-appuser}
+      - UID=${UID:-1000}
+      - GID=${GID:-1000}
+      - NCORES=${NCORES:-1}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  build_cache:
+  deps_cache:
+
