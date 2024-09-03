@@ -1,5 +1,6 @@
 FROM docker.io/ubuntu:22.04
-LABEL maintainer "DeftDawg <DeftDawg@gmail.com>"
+LABEL maintainer="DeftDawg <DeftDawg@gmail.com>"
+LABEL maintainer="LongracksLabs <longrackslabs@gmail.com>"
 
 # Set default values for build arguments
 ARG UID=1000
@@ -75,7 +76,7 @@ ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 COPY ./ OrcaSlicer
 
 # Set the working directory
-WORKDIR OrcaSlicer
+WORKDIR /OrcaSlicer
 
 # Conditional steps based on build arguments
 
@@ -92,6 +93,7 @@ RUN if [ "$BUILD_D" = "YES" ]; then ./BuildLinux.sh -d; fi
 RUN if [ "$BUILD_S" = "YES" ]; then ./BuildLinux.sh -s; fi
 
 # Build AppImage
+ENV container=podman
 RUN if [ "$BUILD_I" = "YES" ]; then ./BuildLinux.sh -i; fi
 
 
@@ -122,8 +124,11 @@ WORKDIR /home/$USER
 ENV HOME=/home/$USER
 
 # for debugging, use an entrypoint instead of CMD to start a bash shell
-# ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/bin/bash"]
+
+# then start docker into shell with
+# docker run -it --entrypoint /bin/bash orcaslicer
 
 # Using an entrypoint instead of CMD because the binary
 # accepts several command line arguments.
-ENTRYPOINT ["/OrcaSlicer/build/package/bin/orca-slicer"]
+# ENTRYPOINT ["/OrcaSlicer/build/package/bin/orca-slicer"]
